@@ -6,9 +6,11 @@ use App\Models\Colaborador;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class ColaboradorController extends Controller {
+class ColaboradorController extends Controller
+{
 
-    public function index() {
+    public function index()
+    {
         return Colaborador::all();
     }
 
@@ -61,31 +63,32 @@ class ColaboradorController extends Controller {
         return Colaborador::findOrFail($id);
     }
 
-    public function update(Request $request, string $id) {
+    public function update(Request $request, $id) {
         $colaborador = Colaborador::findOrFail($id);
 
         $validated = $request->validate([
-            'codigo'        => 'required|unique:colaboradores, codigo,' . $id,
-            'nome_completo' => 'required|string',
-            'apelido'       => 'nullable|string',
-            'nome_pai'      => 'nullable|string',
-            'nome_mae'      => 'nullable|string',
-            'cpf'           => 'required|string|size:11|unique:colaboradores, cpf,' . $id,
+            'codigo'          => 'required|unique:colaboradores,codigo,' . $id,
+            'nome_completo'   => 'required|string',
+            'apelido'         => 'nullable|string',
+            'nome_pai'        => 'nullable|string',
+            'nome_mae'        => 'nullable|string',
+            'cpf'             => 'required|string|size:11|unique:colaboradores,cpf,' . $id,
             'data_nascimento' => 'required|date',
-            'cargo'           => 'required|string'
+            'cargo'           => 'required|string',
         ]);
 
         $colaborador->update($validated);
 
-        $retornoJson = [
-            'id' => $colaborador->id,
-            'data' => now()->toDateTimeLocalString(),
-            'metodo' => 'ATUALIZAR',
-            'retorno' => 'SUCESSO'
-        ];
-
-        return response()->json($retornoJson, 200);
+        return response()->json([
+            'id'      => $colaborador->id,
+            'data'    => now()->toDateTimeLocalString(),
+            'metodo'  => 'ATUALIZAR',
+            'retorno' => 'SUCESSO',
+        ], 200);
     }
+
+
+
 
     public function destroy(string $id) {
         $colaborador = Colaborador::where('id', $id)->first();
