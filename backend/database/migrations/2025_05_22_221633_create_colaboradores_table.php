@@ -9,7 +9,7 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('colaboradores', function(BluePrint $table) {
              $table->id();
-             $table->string('código')->unique();
+             $table->string('codigo')->unique();
              $table->string('nome_completo');
              $table->string('apelido');
              $table->string('nome_pai');
