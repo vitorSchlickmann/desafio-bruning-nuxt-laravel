@@ -118,7 +118,7 @@ class ColaboradorTest extends TestCase {
         $responseDeletar->assertStatus(200)
             ->assertJsonFragment([
                 'id' => (string) $id,
-                'metodo' => 'DELETE',
+                'metodo' => 'EXCLUSAO',
                 'retorno' => 'SUCESSO'
     ]);
 

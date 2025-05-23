@@ -41,7 +41,7 @@ class ColaboradorController extends Controller
 
             return response()->json([
                 'id'      => null,
-                'data'    => now()->toDateTimeString(),
+                'dataOperacao'    => now()->toDateTimeString(),
                 'metodo'  => $request->method(),
                 'mensage' => 'FALHA',
                 'errors'  => $customErrors,
@@ -52,7 +52,7 @@ class ColaboradorController extends Controller
 
         return response()->json([
             'id' => $colaborador->id,
-            'data' => $colaborador->created_at->toDateTimeString(),
+            'dataOperacao' => $colaborador->created_at->toDateTimeString(),
             'metodo' => 'CRIACAO',
             'retorno' => 'SUCESSO'
         ], 201);
@@ -81,7 +81,7 @@ class ColaboradorController extends Controller
 
         return response()->json([
             'id'      => $colaborador->id,
-            'data'    => now()->toDateTimeLocalString(),
+            'dataOperacao'    => now()->toDateTimeLocalString(),
             'metodo'  => 'ATUALIZAR',
             'retorno' => 'SUCESSO',
         ], 200);
@@ -96,8 +96,8 @@ class ColaboradorController extends Controller
         if (!$colaborador) {
             return response()->json([
                 'id' => null,
-                'data' => now()->toDateTimeString(),
-                'metodo' => 'DELETE',
+                'dataOperacao' => now()->toDateTimeString(),
+                'metodo' => 'EXCLUSAO',
                 'retorno' => 'NAO_ENCONTRADO',
                 'mensage' => 'Colaborador não encontrado'
             ], 404);
@@ -107,10 +107,10 @@ class ColaboradorController extends Controller
 
         return response()->json([
             'id'      => $id,
-            'data'    => now()->toDateTimeString(),
-            'metodo'  => 'DELETE',
+            'dataOperacao'    => now()->toDateTimeString(),
+            'metodo'  => 'EXCLUSAO',
             'retorno' => 'SUCESSO',
-            'mensage' => 'Colaborador excluído com sucesso.'
+            'mensage' => "Colaborador ({$colaborador->id} - {$colaborador->nome_completo}) excluído com sucesso."
         ], 200);
     }
 }
