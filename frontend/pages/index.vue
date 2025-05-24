@@ -4,8 +4,8 @@
     <div class="tabs">
       <h1>Colaboradores da Bruning</h1>
       <div class="tab-links">
-        <span class="tab">Lista</span>
-        <span class="tab active">Cadastro</span>
+        <NuxtLink to="/lista" class="tab" :class="{ active: $route.path === '/lista' }">Lista</NuxtLink>
+        <NuxtLink to="/" class="tab" :class="{ active: $route.path === '/' }">Cadastro</NuxtLink>
       </div>
     </div>
 
@@ -144,6 +144,7 @@ function salvar() {
 .tab {
   color: #888;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .tab.active {
