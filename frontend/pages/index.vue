@@ -12,32 +12,32 @@
     <!-- Formulário -->
     <div class="form-container">
       <h2>Formulário de Cadastro</h2>
-      <form @submit.prevent="salvar">
+      <form @submit.prevent="salvarColaborador">
         <!-- Linha 1 -->
         <div class="row cols-3">
           <div class="field">
             <label for="codigo">Código</label>
-            <input type="text" id="codigo" v-model="form.codigo" />
+            <input type="text" id="codigo" v-model="colaborador.codigo" :disabled="camposDesabilitados" />
           </div>
           <div class="field">
             <label for="nomeCompleto">Nome completo</label>
-            <input type="text" id="nomeCompleto" v-model="form.nomeCompleto" />
+            <input type="text" id="nomeCompleto" v-model="colaborador.nome_completo" :disabled="camposDesabilitados" />
           </div>
           <div class="field">
             <label for="apelido">Apelido</label>
-            <input type="text" id="apelido" v-model="form.apelido" />
+            <input type="text" id="apelido" v-model="colaborador.apelido" :disabled="camposDesabilitados" />
           </div>
         </div>
 
         <!-- Linha 2 -->
         <div class="row cols-2">
           <div class="field">
-            <label for="nomePai">Nome do pai / mãe</label>
-            <input type="text" id="nomePai" v-model="form.nomePai" />
+            <label for="nomePai">Nome do pai</label>
+            <input type="text" id="nomePai" v-model="colaborador.nome_pai" :disabled="camposDesabilitados" />
           </div>
           <div class="field">
-            <label for="nomeMae">Nome do pai / mãe</label>
-            <input type="text" id="nomeMae" v-model="form.nomeMae" />
+            <label for="nomeMae">Nome do mãe</label>
+            <input type="text" id="nomeMae" v-model="colaborador.nome_mae" :disabled="camposDesabilitados" />
           </div>
         </div>
 
@@ -46,29 +46,30 @@
           <div class="field">
             <label for="cpf">CPF</label>
             <ClientOnly>
-              <input v-imask="{mask: '000.000.000-00'}" type="text" id="cpf" v-model="form.cpf" placeholder="___.___.___-__" />
-              </ClientOnly>
+              <input v-imask="{ mask: '000.000.000-00' }" type="text" id="cpf" v-model="colaborador.cpf"
+                placeholder="___.___.___-__" :disabled="camposDesabilitados" />
+            </ClientOnly>
           </div>
           <div class="field">
             <label for="dataNascimento">Data de nascimento</label>
             <ClientOnly>
-              <input v-mask="{mask: '00/00/0000'}" type="text" id="dataNascimento" v-model="form.dataNascimento"
-                placeholder="__/__/____" />
-                </ClientOnly>
+              <input v-imask="{ mask: '00/00/0000' }" type="text" id="data_nascimento"
+                v-model="colaborador.data_nascimento" placeholder="__/__/____" :disabled="camposDesabilitados" />
+            </ClientOnly>
           </div>
           <div class="field">
             <label for="cargo">Cargo</label>
-            <input type="text" id="cargo" v-model="form.cargo" />
+            <input type="text" id="cargo" v-model="colaborador.cargo" :disabled="camposDesabilitados" />
           </div>
         </div>
 
         <!-- Botões -->
         <div class="actions">
           <div class="left-actions">
-            <button type="button" @click="voltar">Voltar</button>
-            <button type="reset" @click="limpar">Limpar</button>
+            <button type="button" @click="voltarParaLista">Voltar</button>
+            <button v-if="modo === 'novo'" type="reset" @click="limpar">Limpar</button>
           </div>
-          <button type="submit" class="save-button">Salvar</button>
+          <button v-if="modo !== 'ver'" type="submit" class="save-button">Salvar</button>
         </div>
       </form>
     </div>
@@ -76,30 +77,83 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-const form = reactive({
+const route = useRoute()
+const router = useRouter();
+
+const modo = ref(route.query?.modo ?? 'novo')
+const codigo = ref(route.query?.codigo ?? null)
+
+const camposDesabilitados = ref(false)
+
+const colaborador = ref({
   codigo: '',
-  nomeCompleto: '',
+  nome_completo: '',
   apelido: '',
-  nomePai: '',
-  nomeMae: '',
+  nome_pai: '',
+  nome_mae: '',
   cpf: '',
-  dataNascimento: '',
+  data_nascimento: '',
   cargo: ''
 })
 
-function voltar() {
-  console.log('Voltar clicado')
+const voltarParaLista = () => {
+  router.push('/lista')
 }
 
-function limpar() {
-  Object.keys(form).forEach(key => form[key] = '')
+// Operações 
+
+const salvarColaborador = async () => {
+  try {
+    const response = await fetch('http://localhost:8000/api/colaboradores', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(colaborador.value)
+    })
+
+    const resultado = await response.json()
+
+    if (!response.ok) {
+      if (resultado?.errors) {
+        const mensagens = Object.values(resultado.errors).flat()
+        alert('Erro ao salvar:\n' + mensagens.join('\n'))
+      } else {
+        alert('Erro: ' + (resultado?.message ?? 'Erro desconhecido'))
+      }
+      return
+    }
+
+    alert('Colaborador cadastrado com sucesso!')
+    router.push('/lista')
+  } catch (erro) {
+    console.error(erro)
+    alert('Erro ao conectar com o servidor.')
+  }
 }
 
-function salvar() {
-  console.log('Dados salvos:', form)
-}
+onMounted(async () => {
+  if ((modo.value === 'editar' || modo.value === 'ver') && codigo.value) {
+    // dados simulados
+    colaborador.value = {
+      codigo: '999',
+      nome: 'Richard Pereira Cardoso',
+      apelido: 'Rich',
+      nome_pai_mae: 'Maria Cardoso',
+      nome_pai_mae2: 'João Pereira',
+      cpf: '123.456.789-00',
+      nascimento: '1990-01-01',
+      cargo: 'Analista'
+    }
+
+    camposDesabilitados.value = modo.value === 'ver'
+  }
+})
+
+
 </script>
 
 <style scoped>
