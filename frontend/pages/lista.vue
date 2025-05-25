@@ -19,10 +19,8 @@
                             <p class="nascimento">Nascimento: <strong>{{ colaborador.data_nascimento }}</strong></p>
                         </div>
                         <div class="acoes">
-                            <NuxtLink :to="`/?modo=ver&codigo=${colaborador.codigo}`" class="visualizar">Visualizar
-                            </NuxtLink>
-                            <NuxtLink :to="`/?modo=editar&codigo=${colaborador.codigo}`" class="editar">Editar
-                            </NuxtLink>
+                            <NuxtLink class="visualizar" :to="{ path: '/', query: { modo: 'editar', id: colaborador.id }}">Visualizar</NuxtLink>
+                            <NuxtLink class="editar" :to="{ path: '/', query: { modo: 'editar', id: colaborador.id }}">Editar</NuxtLink>
                             <button @click="excluirColaborador(colaborador.id)" class="excluir">Excluir</button>
                         </div>
                     </div>
@@ -34,55 +32,57 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
 
-const carregarColaboradores = async () => {
-    try {
-        const response = await fetch('http://localhost:8000/api/colaboradores');
-
-        if (!response.ok) {
-            throw new Error('Erro ao buscar colaboradores');
-        }
-
-        const data = await response.json();
-        colaboradores.value = data;
-    } catch (erro) {
-        console.error(erro);
-        alert('Erro ao carregar colaboradores');
-    }
-
-}
+import { ref, onMounted } from 'vue'
 
 const colaboradores = ref([]);
 
+const carregarColaboradores = async () => {
+  try {
+    const response = await fetch('http://localhost:8000/api/colaboradores')
+
+    if (!response.ok) {
+      throw new Error('Erro ao buscar colaboradores')
+    }
+
+    const data = await response.json()
+
+    console.log('Recebido da API:', data) // 👈 veja no console se há erro na estrutura
+
+    colaboradores.value = data
+  } catch (erro) {
+    console.error('Erro ao carregar colaboradores:', erro)
+    alert('Erro ao carregar colaboradores')
+  }
+}
 
 onMounted(() => {
-    carregarColaboradores();
-});
-
-
+  carregarColaboradores()
+})
 
 const excluirColaborador = async (codigo) => {
-    const confirmarExclusao = confirm(`Deseja realmente excluír o colaborador ${codigo}`);
+  const confirmarExclusao = confirm(`Deseja realmente excluir o colaborador ${codigo}?`)
+  if (!confirmarExclusao) return
 
-    if (!confirmarExclusao) return
+  try {
+    const response = await fetch(`http://localhost:8000/api/colaboradores/${codigo}`, {
+      method: 'DELETE'
+    })
 
-    try {
-        const response = await fetch(`http://localhost:8000/api/colaboradores/${codigo}`, {
-            method: 'DELETE'
-        })
-
-        if (!response.ok) {
-            alert('Erro ao excluir colaborador');
-            return;
-        }
-
-        colaboradores.value = colaboradores.value.filter(c => c.codigo != codigo)
-    } catch (erro) {
-        console.error('Erro ao excluir:', erro);
-        alert('Erro de conexão ao excluir o colaborador.');
+    if (!response.ok) {
+      alert('Erro ao excluir colaborador')
+      return
     }
+
+    // ✅ Ajustado: remover usando ID ou código conforme o seu backend
+    colaboradores.value = colaboradores.value.filter(c => c.id != codigo)
+
+  } catch (erro) {
+    console.error('Erro ao excluir:', erro)
+    alert('Erro de conexão ao excluir o colaborador.')
+  }
 }
+
 
 </script>
 

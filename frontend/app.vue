@@ -1,7 +1,8 @@
 <template>
   <div class="layout">
     <header class="header">
-      <h2 class="header-title">Bruning Sistemas</h2>
+      <!-- <h2 class="header-title">Bruning Sistemas</h2> -->
+       <img class="img-logo" src="./public/logo_bruning-1.png" alt="">
     </header>
 
     <main class="content">
@@ -16,6 +17,10 @@
   padding: 0;
   margin: 0;
   box-sizing: border-box;
+}
+
+.img-logo {
+  width: 180px;
 }
 
 .layout {

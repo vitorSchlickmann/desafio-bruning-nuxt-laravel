@@ -12,7 +12,7 @@
     <!-- Formulário -->
     <div class="form-container">
       <h2>Formulário de Cadastro</h2>
-      <form @submit.prevent="salvarColaborador">
+      <form @submit.prevent="submitForm">
         <!-- Linha 1 -->
         <div class="row cols-3">
           <div class="field">
@@ -21,7 +21,7 @@
           </div>
           <div class="field">
             <label for="nomeCompleto">Nome completo</label>
-            <input type="text" id="nomeCompleto" v-model="colaborador.nome_completo" :disabled="camposDesabilitados" />
+            <input type="text" id="nome_completo" v-model="colaborador.nome_completo" :disabled="camposDesabilitados" />
           </div>
           <div class="field">
             <label for="apelido">Apelido</label>
@@ -33,11 +33,11 @@
         <div class="row cols-2">
           <div class="field">
             <label for="nomePai">Nome do pai</label>
-            <input type="text" id="nomePai" v-model="colaborador.nome_pai" :disabled="camposDesabilitados" />
+            <input type="text" id="nome_pai" v-model="colaborador.nome_pai" :disabled="camposDesabilitados" />
           </div>
           <div class="field">
             <label for="nomeMae">Nome do mãe</label>
-            <input type="text" id="nomeMae" v-model="colaborador.nome_mae" :disabled="camposDesabilitados" />
+            <input type="text" id="nome_mae" v-model="colaborador.nome_mae" :disabled="camposDesabilitados" />
           </div>
         </div>
 
@@ -77,14 +77,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
-const route = useRoute()
+const route = useRoute();
 const router = useRouter();
 
-const modo = ref(route.query?.modo ?? 'novo')
-const codigo = ref(route.query?.codigo ?? null)
+const modo = ref(route.query?.modo ?? 'novo'); // 'novo', 'editar', 'ver'
+const id = ref(route.query.id ?? null);
 
 const camposDesabilitados = ref(false)
 
@@ -97,61 +97,103 @@ const colaborador = ref({
   cpf: '',
   data_nascimento: '',
   cargo: ''
-})
+});
 
 const voltarParaLista = () => {
   router.push('/lista')
-}
-
-// Operações 
+};
 
 const salvarColaborador = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/colaboradores', {
-      method: 'POST',
+    const url = `http://localhost:8000/api/colaboradores${modo.value === 'editar' ? `/${codigo.value}` : ''}`
+    const response = await fetch(url, {
+      method: modo.value === 'editar' ? 'PUT' : 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(colaborador.value)
     })
 
-    const resultado = await response.json()
+    const result = await response.json()
 
     if (!response.ok) {
-      if (resultado?.errors) {
-        const mensagens = Object.values(resultado.errors).flat()
-        alert('Erro ao salvar:\n' + mensagens.join('\n'))
-      } else {
-        alert('Erro: ' + (resultado?.message ?? 'Erro desconhecido'))
-      }
+      throw new Error('Erro no servidor: ' + JSON.stringify(result.errors || result))
+    }
+
+    alert('Colaborador salvo com sucesso!')
+    router.push('/lista')
+  } catch (erro) {
+    console.error('Erro ao salvar:', erro)
+    alert('Erro ao salvar colaborador:\n' + erro.message)
+  }
+};
+
+const atualizarColaborador = async (codigo) => {
+  console.log('🚨 ID passado pro atualizarColaborador:', codigo)
+
+  if (!codigo) {
+    alert('Código inválido para atualização')
+    return
+  }
+
+  try {
+    const response = await fetch(`http://localhost:8000/api/colaboradores/${codigo}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(colaborador.value)
+    })
+
+    if (!response.ok) {
+      alert('Erro ao atualizar colaborador.')
       return
     }
 
-    alert('Colaborador cadastrado com sucesso!')
+    alert('Colaborador atualizado com sucesso!')
     router.push('/lista')
   } catch (erro) {
-    console.error(erro)
-    alert('Erro ao conectar com o servidor.')
+    console.error('Erro ao atualizar:', erro)
+    alert('Erro de conexão ao atualizar o colaborador.')
   }
 }
 
-onMounted(async () => {
-  if ((modo.value === 'editar' || modo.value === 'ver') && codigo.value) {
-    // dados simulados
-    colaborador.value = {
-      codigo: '999',
-      nome: 'Richard Pereira Cardoso',
-      apelido: 'Rich',
-      nome_pai_mae: 'Maria Cardoso',
-      nome_pai_mae2: 'João Pereira',
-      cpf: '123.456.789-00',
-      nascimento: '1990-01-01',
-      cargo: 'Analista'
-    }
 
-    camposDesabilitados.value = modo.value === 'ver'
+watch(
+  () => route.query.id,
+  (val) => {
+    if (val) id.value = val
+  },
+  { immediate: true }
+)
+
+onMounted(async () => {
+  if ((modo.value === 'editar' || modo.value === 'ver') && id.value) {
+    try {
+      const response = await fetch(`http://localhost:8000/api/colaboradores/${id.value}`)
+      const data = await response.json()
+
+      colaborador.value = data
+      camposDesabilitados.value = modo.value === 'ver'
+
+      console.log('🟢 Dados carregados para edição:', colaborador.value)
+    } catch (e) {
+      console.error('❌ Erro ao carregar colaborador:', e)
+    }
   }
 })
+
+const submitForm = () => {
+  console.log('Modo:', modo.value)
+  console.log('ID:', colaborador.value.id)
+
+  if (modo.value === 'editar') {
+    atualizarColaborador(colaborador.value.id)
+  } else {
+    salvarColaborador()
+  }
+}
+
 
 
 </script>
