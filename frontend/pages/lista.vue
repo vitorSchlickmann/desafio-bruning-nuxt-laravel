@@ -15,12 +15,15 @@
                 <li v-for="colaborador in colaboradores" :key="colaborador.codigo" class="item">
                     <div class="item-conteudo">
                         <div>
-                            <p class="nome"><strong>{{ colaborador.codigo }} - {{ colaborador.nome_completo }}</strong></p>
+                            <p class="nome"><strong>{{ colaborador.codigo }} - {{ colaborador.nome_completo }}</strong>
+                            </p>
                             <p class="nascimento">Nascimento: <strong>{{ colaborador.data_nascimento }}</strong></p>
                         </div>
                         <div class="acoes">
-                            <NuxtLink class="visualizar" :to="{ path: '/', query: { modo: 'editar', id: colaborador.id }}">Visualizar</NuxtLink>
-                            <NuxtLink class="editar" :to="{ path: '/', query: { modo: 'editar', id: colaborador.id }}">Editar</NuxtLink>
+                            <NuxtLink class="visualizar"
+                                :to="{ path: '/', query: { modo: 'editar', id: colaborador.id } }">Visualizar</NuxtLink>
+                            <NuxtLink class="editar" :to="{ path: '/', query: { modo: 'editar', id: colaborador.id } }">
+                                Editar</NuxtLink>
                             <button @click="excluirColaborador(colaborador.id)" class="excluir">Excluir</button>
                         </div>
                     </div>
@@ -29,6 +32,12 @@
 
         </div>
     </div>
+
+
+    <div id="mensagem-exclusao" class="mensagem-exclusao oculta">
+        Colaborador excluído com sucesso!
+    </div>
+
 </template>
 
 <script setup>
@@ -38,50 +47,60 @@ import { ref, onMounted } from 'vue'
 const colaboradores = ref([]);
 
 const carregarColaboradores = async () => {
-  try {
-    const response = await fetch('http://localhost:8000/api/colaboradores')
+    try {
+        const response = await fetch('http://localhost:8000/api/colaboradores')
 
-    if (!response.ok) {
-      throw new Error('Erro ao buscar colaboradores')
+        if (!response.ok) {
+            throw new Error('Erro ao buscar colaboradores')
+        }
+
+        const data = await response.json()
+
+        console.log('Recebido da API:', data) // 👈 veja no console se há erro na estrutura
+
+        colaboradores.value = data
+    } catch (erro) {
+        console.error('Erro ao carregar colaboradores:', erro)
+        alert('Erro ao carregar colaboradores')
     }
-
-    const data = await response.json()
-
-    console.log('Recebido da API:', data) // 👈 veja no console se há erro na estrutura
-
-    colaboradores.value = data
-  } catch (erro) {
-    console.error('Erro ao carregar colaboradores:', erro)
-    alert('Erro ao carregar colaboradores')
-  }
 }
 
 onMounted(() => {
-  carregarColaboradores()
+    carregarColaboradores()
 })
 
 const excluirColaborador = async (codigo) => {
-  const confirmarExclusao = confirm(`Deseja realmente excluir o colaborador ${codigo}?`)
-  if (!confirmarExclusao) return
+    const confirmarExclusao = confirm(`Deseja realmente excluir o colaborador ${codigo}?`);
+    if (!confirmarExclusao) return;
 
-  try {
-    const response = await fetch(`http://localhost:8000/api/colaboradores/${codigo}`, {
-      method: 'DELETE'
-    })
+    try {
+        const response = await fetch(`http://localhost:8000/api/colaboradores/${codigo}`, {
+            method: 'DELETE'
+        });
 
-    if (!response.ok) {
-      alert('Erro ao excluir colaborador')
-      return
+        if (!response.ok) {
+            mostrarMensagemErro('Erro ao excluir colaborador.');
+            return;
+        }
+
+        colaboradores.value = colaboradores.value.filter(c => c.id != codigo);
+
+        mostrarMensagemExclusao();
+    } catch (erro) {
+        console.error('Erro ao excluir:', erro);
+        mostrarMensagemErro('Erro de conexão ao excluir o colaborador.');
     }
+};
 
-    // ✅ Ajustado: remover usando ID ou código conforme o seu backend
-    colaboradores.value = colaboradores.value.filter(c => c.id != codigo)
 
-  } catch (erro) {
-    console.error('Erro ao excluir:', erro)
-    alert('Erro de conexão ao excluir o colaborador.')
-  }
-}
+const mostrarMensagemExclusao = () => {
+  const el = document.getElementById('mensagem-exclusao');
+  if (!el) return;
+
+  el.classList.remove('oculta');
+  setTimeout(() => el.classList.add('oculta'), 1500);
+};
+
 
 
 </script>
@@ -232,5 +251,26 @@ const excluirColaborador = async (codigo) => {
 
 .excluir:hover {
     border: 2px solid #dc3540;
+}
+
+.mensagem-exclusao {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background-color: #f56565;
+    /* vermelho mais leve */
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 9999;
+}
+
+.oculta {
+    opacity: 0;
+    pointer-events: none;
 }
 </style>

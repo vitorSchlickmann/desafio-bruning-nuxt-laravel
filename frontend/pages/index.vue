@@ -74,6 +74,16 @@
       </form>
     </div>
   </div>
+
+<!-- Toast de sucesso -->
+<div id="mensagem-sucesso" class="mensagem-sucesso oculta"></div>
+
+<!-- Toast de erro -->
+<div id="mensagem-erro" class="mensagem-erro oculta"></div>
+
+
+
+
 </template>
 
 <script setup>
@@ -105,28 +115,34 @@ const voltarParaLista = () => {
 
 const salvarColaborador = async () => {
   try {
-    const url = `http://localhost:8000/api/colaboradores${modo.value === 'editar' ? `/${codigo.value}` : ''}`
+    const url = `http://localhost:8000/api/colaboradores${modo.value === 'editar' ? `/${codigo.value}` : ''}`;
     const response = await fetch(url, {
       method: modo.value === 'editar' ? 'PUT' : 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(colaborador.value)
-    })
+    });
 
-    const result = await response.json()
+    const result = await response.json();
 
     if (!response.ok) {
-      throw new Error('Erro no servidor: ' + JSON.stringify(result.errors || result))
+      // Mensagem fixa e clara
+      mostrarMensagemErro('Este CPF já está em uso. Por favor, verifique os dados.');
+      return;
     }
 
-    alert('Colaborador salvo com sucesso!')
-    router.push('/lista')
+    mostrarMensagemSucesso();
+    setTimeout(() => router.push('/lista'), 1500);
+
   } catch (erro) {
-    console.error('Erro ao salvar:', erro)
-    alert('Erro ao salvar colaborador:\n' + erro.message)
+    console.error('❌ Erro inesperado:', erro);
+    mostrarMensagemErro('Erro inesperado ao salvar colaborador.');
   }
 };
+
+
+
 
 const atualizarColaborador = async (codigo) => {
   console.log('🚨 ID passado pro atualizarColaborador:', codigo)
@@ -186,7 +202,7 @@ onMounted(async () => {
 
       colaborador.value.codigo = proximo_codigo;
     } catch (e) {
-      colaborador.value.codigo = 1; 
+      colaborador.value.codigo = 1;
     }
   }
 });
@@ -202,6 +218,28 @@ const submitForm = () => {
     salvarColaborador()
   }
 }
+
+const mostrarMensagemSucesso = () => {
+  const el = document.getElementById('mensagem-sucesso');
+  if (!el) return;
+
+  el.innerText = 'Colaborador salvo com sucesso!';
+  el.classList.remove('oculta');
+  setTimeout(() => el.classList.add('oculta'), 1500);
+};
+
+const mostrarMensagemErro = (mensagem) => {
+  const el = document.getElementById('mensagem-erro');
+  if (!el) return;
+
+  el.innerText = String(mensagem); 
+  el.classList.remove('oculta');
+  setTimeout(() => el.classList.add('oculta'), 1500);
+};
+
+
+
+
 
 </script>
 
@@ -370,4 +408,36 @@ button {
     align-self: flex-end;
   }
 }
+
+.mensagem-sucesso,
+.mensagem-erro {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  opacity: 1;
+  transition: opacity 0.4s ease-in-out;
+  z-index: 9999;
+}
+
+.mensagem-sucesso {
+  background-color: #38a169; /* verde */
+  color: white;
+}
+
+.mensagem-erro {
+  background-color: #e53e3e; /* vermelho */
+  color: white;
+}
+
+.oculta {
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+
 </style>
