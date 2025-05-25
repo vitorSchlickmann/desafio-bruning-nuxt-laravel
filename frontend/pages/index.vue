@@ -20,7 +20,7 @@
             <input class="nao-clicavel" type="text" id="codigo" v-model="colaborador.codigo" :disabled="camposDesabilitados" readonly/>
           </div>
           <div class="field">
-            <label for="nomeCompleto">Nome completo</label>
+            <label for="nomeCompleto">Nome completo <span class="obrigatorio">*</span></label>
             <input type="text" id="nome_completo" v-model="colaborador.nome_completo" :disabled="camposDesabilitados" />
           </div>
           <div class="field">
@@ -44,21 +44,21 @@
         <!-- Linha 3 -->
         <div class="row cols-3">
           <div class="field">
-            <label for="cpf">CPF</label>
+            <label for="cpf">CPF <span class="obrigatorio">*</span></label>
             <ClientOnly>
               <input v-imask="{ mask: '000.000.000-00' }" type="text" id="cpf" v-model="colaborador.cpf"
                 placeholder="___.___.___-__" :disabled="camposDesabilitados" />
             </ClientOnly>
           </div>
           <div class="field">
-            <label for="dataNascimento">Data de nascimento</label>
+            <label for="dataNascimento">Data de nascimento <span class="obrigatorio">*</span></label>
             <ClientOnly>
               <input v-imask="{ mask: '00/00/0000' }" type="text" id="data_nascimento"
                 v-model="colaborador.data_nascimento" placeholder="__/__/____" :disabled="camposDesabilitados" />
             </ClientOnly>
           </div>
           <div class="field">
-            <label for="cargo">Cargo</label>
+            <label for="cargo">Cargo <span class="obrigatorio">*</span></label>
             <input type="text" id="cargo" v-model="colaborador.cargo" :disabled="camposDesabilitados" />
           </div>
         </div>
@@ -112,6 +112,7 @@ const voltarParaLista = () => {
 };
 
 const salvarColaborador = async () => {
+  // ✅ 1. Validação dos campos obrigatórios
   const camposObrigatorios = [
     { campo: 'nome_completo', label: 'Nome completo' },
     { campo: 'data_nascimento', label: 'Data de nascimento' },
@@ -145,12 +146,7 @@ const salvarColaborador = async () => {
       const erros = result.errors || {};
       const cpfErro = erros.cpf?.[0];
 
-      if (cpfErro && cpfErro.toLowerCase().includes('uso')) {
-        mostrarMensagemErro('Este CPF já está em uso. Por favor, verifique os dados.');
-      } else {
-        mostrarMensagemErro('Erro ao salvar colaborador. Verifique os dados e tente novamente.');
-      }
-
+      mostrarMensagemErro('CPF já cadastrado. Por favor, verifique os dados.');
       return;
     }
 
@@ -245,7 +241,7 @@ const mostrarMensagemSucesso = () => {
 
   el.innerText = 'Colaborador salvo com sucesso!';
   el.classList.remove('oculta');
-  setTimeout(() => el.classList.add('oculta'), 1000);
+  setTimeout(() => el.classList.add('oculta'), 2000);
 };
 
 const mostrarMensagemErro = (mensagem) => {
@@ -254,7 +250,7 @@ const mostrarMensagemErro = (mensagem) => {
 
   el.innerText = String(mensagem); 
   el.classList.remove('oculta');
-  setTimeout(() => el.classList.add('oculta'), 1000);
+  setTimeout(() => el.classList.add('oculta'), 4000);
 };
 
 
@@ -282,6 +278,11 @@ const limparFormulario = () => {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
+}
+
+.obrigatorio {
+  color: #e53e3e;
+  font-weight: bold;
 }
 
 .nao-clicavel {
