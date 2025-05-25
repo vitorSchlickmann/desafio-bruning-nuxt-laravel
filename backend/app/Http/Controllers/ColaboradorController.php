@@ -90,7 +90,7 @@ class ColaboradorController extends Controller
             'cargo'           => 'required|string',
         ]);
 
-        $colaborador->update($validated);
+        $colaborador->update($request->all());
 
         return response()->json([
             'id'      => $colaborador->id,

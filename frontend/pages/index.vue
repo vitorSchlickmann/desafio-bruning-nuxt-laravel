@@ -140,7 +140,8 @@ const atualizarColaborador = async (codigo) => {
     const response = await fetch(`http://localhost:8000/api/colaboradores/${codigo}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-HTTP-Method-Overrride': 'PUT'
       },
       body: JSON.stringify(colaborador.value)
     })
