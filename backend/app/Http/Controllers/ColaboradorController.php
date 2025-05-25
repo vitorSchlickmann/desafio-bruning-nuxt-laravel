@@ -7,11 +7,9 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class ColaboradorController extends Controller
-{
+class ColaboradorController extends Controller {
 
-    public function index()
-    {
+    public function index() {
         return Colaborador::all();
     }
 
@@ -125,5 +123,13 @@ class ColaboradorController extends Controller
             'retorno' => 'SUCESSO',
             'mensage' => "Colaborador ({$colaborador->id} - {$colaborador->nome_completo}) excluído com sucesso."
         ], 200);
+    }
+
+    public function proximoCodigo() {
+        $ultimoColaborador = Colaborador::orderBy('codigo', 'desc') -> first();
+
+        $proximoCodigo = $ultimoColaborador ? $ultimoColaborador -> codigo + 1 : 1;
+
+        return response()->json(['proximo_codigo' => $proximoCodigo]);
     }
 }

@@ -171,18 +171,26 @@ watch(
 onMounted(async () => {
   if ((modo.value === 'editar' || modo.value === 'ver') && id.value) {
     try {
-      const response = await fetch(`http://localhost:8000/api/colaboradores/${id.value}`)
-      const data = await response.json()
+      const response = await fetch(`http://localhost:8000/api/colaboradores/${id.value}`);
+      const data = await response.json();
 
-      colaborador.value = data
-      camposDesabilitados.value = modo.value === 'ver'
-
-      console.log('🟢 Dados carregados para edição:', colaborador.value)
+      colaborador.value = data;
+      camposDesabilitados.value = modo.value === 'ver';
     } catch (e) {
-      console.error('❌ Erro ao carregar colaborador:', e)
+      console.error('❌ Erro ao carregar colaborador:', e);
+    }
+  } else {
+    try {
+      const res = await fetch('http://localhost:8000/api/colaboradores/proximo-codigo');
+      const { proximo_codigo } = await res.json();
+
+      colaborador.value.codigo = proximo_codigo;
+    } catch (e) {
+      colaborador.value.codigo = 1; 
     }
   }
-})
+});
+
 
 const submitForm = () => {
   console.log('Modo:', modo.value)
@@ -194,8 +202,6 @@ const submitForm = () => {
     salvarColaborador()
   }
 }
-
-
 
 </script>
 
