@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Colaborador;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -15,6 +16,18 @@ class ColaboradorController extends Controller
     }
 
     public function store(Request $request) {
+
+        // Formata o CPF que vem do front-end para sem pontuação e traçõos
+        $request->merge([
+            'cpf' => preg_replace('/\D/', '', $request->cpf)
+        ]);
+
+        $data = $request->all();
+
+        if (!empty($data['data_nascimento'])) {
+            $data['data_nascimento'] = Carbon::createFromFormat('d/m/Y', $data['data_nascimento']) -> format('Y-m-d');
+        }
+
         $validator = Validator::make($request->all(), [
             'codigo'        => 'required|unique:colaboradores',
             'nome_completo' => 'required|string',
@@ -22,7 +35,7 @@ class ColaboradorController extends Controller
             'nome_pai'      => 'nullable|string',
             'nome_mae'      => 'nullable|string',
             'cpf'           => 'required|string|size:11|unique:colaboradores',
-            'data_nascimento' => 'required|date',
+            'data_nascimento' => 'required|string',
             'cargo'           => 'required|string'
         ]);
 
@@ -48,7 +61,7 @@ class ColaboradorController extends Controller
             ], 422);
         }
 
-        $colaborador = Colaborador::create($validator->validated());
+        $colaborador = Colaborador::create($data);
 
         return response()->json([
             'id' => $colaborador->id,
@@ -91,7 +104,7 @@ class ColaboradorController extends Controller
 
 
     public function destroy(string $id) {
-        $colaborador = Colaborador::where('id', $id)->first();
+        $colaborador = Colaborador::find($id);
 
         if (!$colaborador) {
             return response()->json([

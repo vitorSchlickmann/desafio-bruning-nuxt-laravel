@@ -14,7 +14,7 @@ return new class extends Migration {
              $table->string('apelido');
              $table->string('nome_pai');
              $table->string('nome_mae');
-             $table->string('cpf');
+             $table->string('cpf')->unique();
              $table->date('data_nascimento');
              $table->string('cargo');
              $table->timestamps();
