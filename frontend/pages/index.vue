@@ -82,8 +82,6 @@
 <div id="mensagem-erro" class="mensagem-erro oculta"></div>
 
 
-
-
 </template>
 
 <script setup>
@@ -114,6 +112,23 @@ const voltarParaLista = () => {
 };
 
 const salvarColaborador = async () => {
+  const camposObrigatorios = [
+    { campo: 'nome_completo', label: 'Nome completo' },
+    { campo: 'data_nascimento', label: 'Data de nascimento' },
+    { campo: 'cpf', label: 'CPF' },
+    { campo: 'cargo', label: 'Cargo' }
+  ];
+
+  const faltando = camposObrigatorios
+    .filter(({ campo }) => !colaborador.value[campo] || colaborador.value[campo].toString().trim() === '')
+    .map(({ label }) => label);
+
+  if (faltando.length > 0) {
+    const mensagem = 'Preencha os campos obrigatórios: ' + faltando.join(', ');
+    mostrarMensagemErro(mensagem);
+    return;
+  }
+
   try {
     const url = `http://localhost:8000/api/colaboradores${modo.value === 'editar' ? `/${codigo.value}` : ''}`;
     const response = await fetch(url, {
@@ -127,13 +142,20 @@ const salvarColaborador = async () => {
     const result = await response.json();
 
     if (!response.ok) {
-      // Mensagem fixa e clara
-      mostrarMensagemErro('CPF já cadastrado. Por favor, verifique os dados.');
+      const erros = result.errors || {};
+      const cpfErro = erros.cpf?.[0];
+
+      if (cpfErro && cpfErro.toLowerCase().includes('uso')) {
+        mostrarMensagemErro('Este CPF já está em uso. Por favor, verifique os dados.');
+      } else {
+        mostrarMensagemErro('Erro ao salvar colaborador. Verifique os dados e tente novamente.');
+      }
+
       return;
     }
 
     mostrarMensagemSucesso();
-    setTimeout(() => router.push('/lista'), 1500);
+    setTimeout(() => router.push('/lista'), 3000);
 
   } catch (erro) {
     console.error('❌ Erro inesperado:', erro);
@@ -144,9 +166,8 @@ const salvarColaborador = async () => {
 
 
 
-const atualizarColaborador = async (codigo) => {
-  console.log('🚨 ID passado pro atualizarColaborador:', codigo)
 
+const atualizarColaborador = async (codigo) => {
   if (!codigo) {
     alert('Código inválido para atualização')
     return
@@ -193,7 +214,6 @@ onMounted(async () => {
       colaborador.value = data;
       camposDesabilitados.value = modo.value === 'ver';
     } catch (e) {
-      console.error('❌ Erro ao carregar colaborador:', e);
     }
   } else {
     try {
@@ -225,7 +245,7 @@ const mostrarMensagemSucesso = () => {
 
   el.innerText = 'Colaborador salvo com sucesso!';
   el.classList.remove('oculta');
-  setTimeout(() => el.classList.add('oculta'), 1500);
+  setTimeout(() => el.classList.add('oculta'), 1000);
 };
 
 const mostrarMensagemErro = (mensagem) => {
@@ -234,7 +254,7 @@ const mostrarMensagemErro = (mensagem) => {
 
   el.innerText = String(mensagem); 
   el.classList.remove('oculta');
-  setTimeout(() => el.classList.add('oculta'), 1500);
+  setTimeout(() => el.classList.add('oculta'), 1000);
 };
 
 
@@ -249,7 +269,6 @@ const limparFormulario = () => {
     cpf: '',
     data_nascimento: '',
     cargo: ''
-    // ...demais campos que devem ser limpos
   })
 
   colaborador.value.codigo = codigoAtual
