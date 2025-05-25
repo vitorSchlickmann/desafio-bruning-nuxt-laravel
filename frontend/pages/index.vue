@@ -17,7 +17,7 @@
         <div class="row cols-3">
           <div class="field">
             <label for="codigo">Código</label>
-            <input type="text" id="codigo" v-model="colaborador.codigo" :disabled="camposDesabilitados" />
+            <input class="nao-clicavel" type="text" id="codigo" v-model="colaborador.codigo" :disabled="camposDesabilitados" readonly/>
           </div>
           <div class="field">
             <label for="nomeCompleto">Nome completo</label>
@@ -67,7 +67,7 @@
         <div class="actions">
           <div class="left-actions">
             <button type="button" @click="voltarParaLista">Voltar</button>
-            <button v-if="modo === 'novo'" type="reset" @click="limpar">Limpar</button>
+            <button v-if="modo === 'novo'" @click="limparFormulario" type="button">Limpar</button>
           </div>
           <button v-if="modo !== 'ver'" type="submit" class="save-button">Salvar</button>
         </div>
@@ -128,7 +128,7 @@ const salvarColaborador = async () => {
 
     if (!response.ok) {
       // Mensagem fixa e clara
-      mostrarMensagemErro('Este CPF já está em uso. Por favor, verifique os dados.');
+      mostrarMensagemErro('CPF já cadastrado. Por favor, verifique os dados.');
       return;
     }
 
@@ -238,8 +238,22 @@ const mostrarMensagemErro = (mensagem) => {
 };
 
 
+const limparFormulario = () => {
+  const codigoAtual = colaborador.value.codigo
 
+  Object.assign(colaborador.value, {
+    nome_completo: '',
+    apelido: '',
+    nome_pai: '',
+    nome_mae: '',
+    cpf: '',
+    data_nascimento: '',
+    cargo: ''
+    // ...demais campos que devem ser limpos
+  })
 
+  colaborador.value.codigo = codigoAtual
+}
 
 </script>
 
@@ -249,6 +263,13 @@ const mostrarMensagemErro = (mensagem) => {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
+}
+
+.nao-clicavel {
+  pointer-events: none;
+  background-color: #f9fafb; /* mantém o fundo claro */
+  color: black;
+  cursor: default;
 }
 
 .container {

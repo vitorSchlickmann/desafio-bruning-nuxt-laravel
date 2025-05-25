@@ -21,10 +21,10 @@
                         </div>
                         <div class="acoes">
                             <NuxtLink class="visualizar"
-                                :to="{ path: '/', query: { modo: 'editar', id: colaborador.id } }">Visualizar</NuxtLink>
+                                :to="{ path: '/', query: { modo: 'ver', id: colaborador.id } }">Visualizar</NuxtLink>
                             <NuxtLink class="editar" :to="{ path: '/', query: { modo: 'editar', id: colaborador.id } }">
                                 Editar</NuxtLink>
-                            <button @click="excluirColaborador(colaborador.id)" class="excluir">Excluir</button>
+                            <button @click="pedirConfirmacaoExclusao(colaborador.id)" class="excluir">Excluir</button>
                         </div>
                     </div>
                 </li>
@@ -37,6 +37,17 @@
     <div id="mensagem-exclusao" class="mensagem-exclusao oculta">
         Colaborador excluído com sucesso!
     </div>
+
+    <div v-if="mostrarConfirmacao" class="confirmacao-overlay">
+        <div class="confirmacao-modal">
+            <p>Confirmar exclusão?</p>
+            <div class="botoes">
+                <button @click="confirmarExclusaoReal" class="btn-confirmar">Sim</button>
+                <button @click="cancelarExclusao" class="btn-cancelar">Não</button>
+            </div>
+        </div>
+    </div>
+
 
 </template>
 
@@ -94,11 +105,49 @@ const excluirColaborador = async (codigo) => {
 
 
 const mostrarMensagemExclusao = () => {
-  const el = document.getElementById('mensagem-exclusao');
-  if (!el) return;
+    const el = document.getElementById('mensagem-exclusao');
+    if (!el) return;
 
-  el.classList.remove('oculta');
-  setTimeout(() => el.classList.add('oculta'), 1500);
+    el.classList.remove('oculta');
+    setTimeout(() => el.classList.add('oculta'), 1500);
+};
+
+
+const mostrarConfirmacao = ref(false);
+const colaboradorParaExcluir = ref(null);
+
+const pedirConfirmacaoExclusao = (codigo) => {
+  colaboradorParaExcluir.value = codigo;
+  mostrarConfirmacao.value = true;
+};
+
+const confirmarExclusaoReal = async () => {
+  mostrarConfirmacao.value = false;
+
+  try {
+    const response = await fetch(`http://localhost:8000/api/colaboradores/${colaboradorParaExcluir.value}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      mostrarMensagemErro('Erro ao excluir colaborador.');
+      return;
+    }
+
+    colaboradores.value = colaboradores.value.filter(c => c.id != colaboradorParaExcluir.value);
+    mostrarMensagemExclusao();
+  } catch (erro) {
+    console.error('Erro ao excluir:', erro);
+    mostrarMensagemErro('Erro de conexão ao excluir o colaborador.');
+  } finally {
+    colaboradorParaExcluir.value = null;
+  }
+};
+
+
+const cancelarExclusao = () => {
+  colaboradorParaExcluir.value = null;
+  mostrarConfirmacao.value = false;
 };
 
 
@@ -257,8 +306,7 @@ const mostrarMensagemExclusao = () => {
     position: fixed;
     bottom: 20px;
     left: 20px;
-    background-color: #f56565;
-    /* vermelho mais leve */
+    background-color: #10b981;
     color: white;
     padding: 12px 20px;
     border-radius: 8px;
@@ -273,4 +321,51 @@ const mostrarMensagemExclusao = () => {
     opacity: 0;
     pointer-events: none;
 }
+
+.confirmacao-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.confirmacao-modal {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 300px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.confirmacao-modal .botoes {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.btn-confirmar {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-cancelar {
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
 </style>
