@@ -32,7 +32,7 @@ Este projeto foi desenvolvido como parte de um desafio técnico. Ele consiste em
 
 ### 🐙 Back-end (Laravel com MySql)
 
-> Acessar a pasta desafio-bruning
+> Acessar a pasta desafio-bruning-nuxt-laravel
 - executar cd backend
 
 > 1 - Instale as dependencias
