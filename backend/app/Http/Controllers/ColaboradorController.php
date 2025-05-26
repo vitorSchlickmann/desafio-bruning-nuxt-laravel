@@ -75,29 +75,28 @@ class ColaboradorController extends Controller {
     }
 
     public function update(Request $request, $id) {
-        $colaborador = Colaborador::findOrFail($id);
+    $colaborador = Colaborador::findOrFail($id);
 
-        $validated = $request->validate([
-            'codigo'          => 'required|unique:colaboradores,codigo,' . $id,
-            'nome_completo'   => 'required|string',
-            'apelido'         => 'nullable|string',
-            'nome_pai'        => 'nullable|string',
-            'nome_mae'        => 'nullable|string',
-            'cpf'             => 'required|string|size:11|unique:colaboradores,cpf,' . $id,
-            'data_nascimento' => 'required|date',
-            'cargo'           => 'required|string',
-        ]);
+    $validated = $request->validate([
+        'codigo'          => 'required|unique:colaboradores,codigo,' . $id,
+        'nome_completo'   => 'required|string',
+        'apelido'         => 'nullable|string',
+        'nome_pai'        => 'nullable|string',
+        'nome_mae'        => 'nullable|string',
+        'cpf'             => 'required|string|size:11|unique:colaboradores,cpf,' . $id,
+        'data_nascimento' => 'required|date',
+        'cargo'           => 'required|string',
+    ]);
 
-        $colaborador->update($request->all());
+    $colaborador->update($validated);
 
-        return response()->json([
-            'id'      => $colaborador->id,
-            'dataOperacao'    => now()->toDateTimeLocalString(),
-            'metodo'  => 'ATUALIZAR',
-            'retorno' => 'SUCESSO',
-        ], 200);
+    return response()->json([
+        'id'            => $colaborador->id,
+        'dataOperacao'  => now()->toDateTimeLocalString(),
+        'metodo'        => 'ATUALIZAR',
+        'retorno'       => 'SUCESSO',
+    ], 200);
     }
-
 
 
 
@@ -126,9 +125,8 @@ class ColaboradorController extends Controller {
     }
 
     public function proximoCodigo() {
-        $ultimoColaborador = Colaborador::orderBy('codigo', 'desc') -> first();
-
-        $proximoCodigo = $ultimoColaborador ? $ultimoColaborador -> codigo + 1 : 1;
+        $ultimoColaborador = Colaborador::orderBy('codigo', 'desc')->first();
+        $proximoCodigo = $ultimoColaborador ? $ultimoColaborador->codigo + 1 : 1;
 
         return response()->json(['proximo_codigo' => $proximoCodigo]);
     }

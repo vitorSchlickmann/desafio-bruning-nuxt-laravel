@@ -42,8 +42,8 @@
         <div class="confirmacao-modal">
             <p>Confirmar exclusão?</p>
             <div class="botoes">
-                <button @click="confirmarExclusaoReal" class="btn-confirmar">Sim</button>
-                <button @click="cancelarExclusao" class="btn-cancelar">Não</button>
+                <button @click="confirmarExclusaoReal" class="btn-confirmar">Confirmar</button>
+                <button @click="cancelarExclusao" class="btn-cancelar">Cancelar</button>
             </div>
         </div>
     </div>

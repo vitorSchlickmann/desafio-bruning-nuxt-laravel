@@ -53,7 +53,7 @@
           <div class="field">
             <label for="dataNascimento">Data de nascimento <span class="obrigatorio">*</span></label>
             <ClientOnly>
-              <input v-imask="{ mask: '00/00/0000' }" type="text" id="data_nascimento"
+              <input  v-imask="{ mask: '00/00/0000' }" type="text" id="data_nascimento"
                 v-model="colaborador.data_nascimento" placeholder="__/__/____" :disabled="camposDesabilitados" />
             </ClientOnly>
           </div>
@@ -150,47 +150,57 @@ const salvarColaborador = async () => {
       return;
     }
 
-    mostrarMensagemSucesso();
-    setTimeout(() => router.push('/lista'), 3000);
+    mostrarMensagemSucesso('Colaborador cadastrado com sucesso!');
+    setTimeout(() => router.push('/lista'), 500);
 
   } catch (erro) {
     console.error('❌ Erro inesperado:', erro);
-    mostrarMensagemErro('Erro inesperado ao salvar colaborador.');
+    mostrarMensagemErro('Erro inesperado ao cadastrar colaborador.');
   }
 };
 
 
-
-
-
 const atualizarColaborador = async (codigo) => {
   if (!codigo) {
-    alert('Código inválido para atualização')
-    return
+    mostrarMensagemErro('Código inválido para atualização.');
+    return;
+  }
+
+  if (colaborador.value.data_nascimento.includes('/')) {
+    const [dia, mes, ano] = colaborador.value.data_nascimento.split('/');
+    colaborador.value.data_nascimento = `${ano}-${mes}-${dia}`;
   }
 
   try {
     const response = await fetch(`http://localhost:8000/api/colaboradores/${codigo}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
-        'X-HTTP-Method-Overrride': 'PUT'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(colaborador.value)
-    })
+    });
+
+    const result = await response.json();
+    console.log('🔍 Resposta do Laravel:', result);
 
     if (!response.ok) {
-      alert('Erro ao atualizar colaborador.')
-      return
+      if (result?.errors?.cpf?.[0]) {
+        mostrarMensagemErro(result.errors.cpf[0]);
+      } else {
+        mostrarMensagemErro('Erro ao atualizar colaborador.');
+      }
+      return;
     }
 
-    alert('Colaborador atualizado com sucesso!')
-    router.push('/lista')
+    mostrarMensagemSucesso('Colaborador atualizado com sucesso!');
+    setTimeout(() => router.push('/lista'), 1500);
+
   } catch (erro) {
-    console.error('Erro ao atualizar:', erro)
-    alert('Erro de conexão ao atualizar o colaborador.')
+    console.error('❌ Erro inesperado:', erro);
+    mostrarMensagemErro('Erro de conexão ao atualizar colaborador.');
   }
-}
+};
+
 
 
 watch(
@@ -235,14 +245,15 @@ const submitForm = () => {
   }
 }
 
-const mostrarMensagemSucesso = () => {
+const mostrarMensagemSucesso = (mensagem = 'Operação realizada com sucesso.') => {
   const el = document.getElementById('mensagem-sucesso');
   if (!el) return;
 
-  el.innerText = 'Colaborador salvo com sucesso!';
+  el.innerText = mensagem;
   el.classList.remove('oculta');
-  setTimeout(() => el.classList.add('oculta'), 2000);
+  setTimeout(() => el.classList.add('oculta'), 3000);
 };
+
 
 const mostrarMensagemErro = (mensagem) => {
   const el = document.getElementById('mensagem-erro');
