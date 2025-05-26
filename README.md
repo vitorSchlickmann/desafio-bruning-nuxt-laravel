@@ -50,7 +50,7 @@ Este projeto foi desenvolvido como parte de um desafio técnico. Ele consiste em
 ###  Front-end (Nuxt 3)
 
 > Acesse a pasta frontend
-cd frontend 
+- cd frontend 
 
 1 - Instale as depedências 
 - npm install
