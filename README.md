@@ -52,10 +52,10 @@ Este projeto foi desenvolvido como parte de um desafio técnico. Ele consiste em
 > Acesse a pasta frontend
 - cd frontend 
 
-1 - Instale as depedências 
+> Instale as depedências 
 - npm install
 
-> - Inicie o servidor de desenvolvimento.
+> Inicie o servidor de desenvolvimento.
 - npm run dev
 
 > O projeto estará rodando no navegador em `localhost:3000
