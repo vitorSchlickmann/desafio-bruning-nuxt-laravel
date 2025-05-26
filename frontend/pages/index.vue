@@ -57,7 +57,7 @@
             <label for="dataNascimento">Data de nascimento <span class="obrigatorio">*</span></label>
             <ClientOnly>
               <input v-model="colaborador.data_nascimento" type="date" id="data_nascimento"
-                :disabled="camposDesabilitados" />
+                :disabled="camposDesabilitados" :max="dataHoje"/>
             </ClientOnly>
           </div>
           <div class="field">
@@ -98,7 +98,8 @@ const router = useRouter();
 const modo = ref(route.query?.modo ?? 'novo'); // 'novo', 'editar', 'ver'
 const id = ref(route.query.id ?? null);
 
-const camposDesabilitados = ref(false)
+const camposDesabilitados = ref(false);
+const dataHoje = new Date().toISOString().split('T')[0];
 
 const colaborador = ref({
   codigo: '',
@@ -193,7 +194,7 @@ const salvarColaborador = async () => {
         (result?.detalhe?.toLowerCase().includes('cpf') && result.detalhe);
 
       if (cpfErro) {
-        mostrarMensagemErro('CPF já cadastrado. Revise os dados');
+        mostrarMensagemErro('CPF inválido ou Já cadastrado. Revise os dados');
       } else {
         mostrarMensagemErro('Erro ao cadastrar colaborador. Verifique os dados e tente novamente.');
       }
