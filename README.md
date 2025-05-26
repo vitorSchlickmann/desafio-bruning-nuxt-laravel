@@ -35,9 +35,13 @@ Este projeto foi desenvolvido como parte de um desafio técnico. Ele consiste em
 > Acessar a pasta desafio-bruning
 - executar cd backend
 
-1 - Instale as dependencias
-- Composer install
-2 - Execute o servidor
+> 1 - Instale as dependencias
+- composer install - (Em torno de 15 minutos pra instalar todas as depêndencias).
+- cp .env.example .env - (Cria o arquivo .env para obter as configurações do projeto).
+- php artisan key:generate - (Cria uma APP_KEY no .env, usada para encriptação e sessões seguras).
+- php artisan migrate - (Cria todas as tabelas necessárias no banco).
+
+> 2 - Execute o servidor
 - php artisan serve
 
 > A API estará disponível em: `http://localhost:8000
@@ -51,7 +55,7 @@ cd frontend
 1 - Instale as depedências 
 - npm install
 
-2 - Inicie o servidor de desenvolvimento.
+> - Inicie o servidor de desenvolvimento.
 - npm run dev
 
 > O projeto estará rodando no navegador em `localhost:3000
