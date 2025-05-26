@@ -7,13 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
-class ColaboradorController extends Controller
-{
+class ColaboradorController extends Controller {
 
     public function index() {
         return Colaborador::all();
     }
-
 
     public function store(Request $request) {
         try {
@@ -48,10 +46,7 @@ class ColaboradorController extends Controller
         }
     }
 
-
-
-    public function show(string $id)
-    {
+    public function show(string $id) {
         return Colaborador::findOrFail($id);
     }
 
@@ -99,8 +94,6 @@ class ColaboradorController extends Controller
         ], 500);
     }
 }
-
-
 
     public function destroy(string $id) {
         $colaborador = Colaborador::find($id);
