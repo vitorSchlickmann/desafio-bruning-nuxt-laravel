@@ -30,7 +30,7 @@ Este projeto foi desenvolvido como parte de um desafio técnico. Ele consiste em
 
 ## ⚙️ Como executar o projeto
 
-### 🐙 Back-end (Laravel com SQLite)
+### 🐙 Back-end (Laravel com MySql)
 
 > Acessar a pasta desafio-bruning
 - executar cd backend
