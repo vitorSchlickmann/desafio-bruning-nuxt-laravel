@@ -112,7 +112,7 @@ const voltarParaLista = () => {
 };
 
 const salvarColaborador = async () => {
-  // ✅ 1. Validação dos campos obrigatórios
+  // 1. Validação de campos obrigatórios
   const camposObrigatorios = [
     { campo: 'nome_completo', label: 'Nome completo' },
     { campo: 'data_nascimento', label: 'Data de nascimento' },
@@ -131,7 +131,22 @@ const salvarColaborador = async () => {
   }
 
   try {
-    const url = `http://localhost:8000/api/colaboradores${modo.value === 'editar' ? `/${codigo.value}` : ''}`;
+    // 2. Limpar CPF (remover máscara)
+    colaborador.value.cpf = colaborador.value.cpf.replace(/\D/g, '');
+
+    // 3. Converter data de nascimento para formato YYYY-MM-DD
+    const data = colaborador.value.data_nascimento;
+    if (typeof data === 'string' && data.includes('/') && data.split('/').length === 3) {
+      const [dia, mes, ano] = data.split('/');
+      if (dia.length === 2 && mes.length === 2 && ano.length === 4) {
+        colaborador.value.data_nascimento = `${ano}-${mes}-${dia}`;
+      }
+    }
+
+    console.log('📤 Dados enviados para API:', colaborador.value);
+
+    // 4. Enviar para API
+    const url = `http://localhost:8000/api/colaboradores${modo.value === 'editar' ? `/${colaborador.value.codigo}` : ''}`;
     const response = await fetch(url, {
       method: modo.value === 'editar' ? 'PUT' : 'POST',
       headers: {
@@ -140,24 +155,41 @@ const salvarColaborador = async () => {
       body: JSON.stringify(colaborador.value)
     });
 
-    const result = await response.json();
+    // 5. Ler resposta crua e tentar parsear
+    const text = await response.text();
+    console.log('📥 Resposta crua da API:', text);
 
-    if (!response.ok) {
-      const erros = result.errors || {};
-      const cpfErro = erros.cpf?.[0];
-
-      mostrarMensagemErro('CPF já cadastrado. Por favor, verifique os dados.');
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (e) {
+      console.error('❌ Erro ao converter resposta para JSON:', e);
+      mostrarMensagemErro('Erro inesperado: resposta inválida do servidor.');
       return;
     }
 
+    // 6. Tratar erro de validação
+    if (!response.ok) {
+      const cpfErro = result?.errors?.cpf?.[0];
+      if (cpfErro) {
+        mostrarMensagemErro(cpfErro);
+      } else {
+        mostrarMensagemErro('Erro ao cadastrar colaborador. Verifique os dados e tente novamente.');
+      }
+      return;
+    }
+
+    // 7. Sucesso
     mostrarMensagemSucesso('Colaborador cadastrado com sucesso!');
     setTimeout(() => router.push('/lista'), 500);
 
   } catch (erro) {
-    console.error('❌ Erro inesperado:', erro);
+    console.error('❌ Erro inesperado ao salvar colaborador:', erro);
     mostrarMensagemErro('Erro inesperado ao cadastrar colaborador.');
   }
 };
+
+
 
 
 const atualizarColaborador = async (codigo) => {

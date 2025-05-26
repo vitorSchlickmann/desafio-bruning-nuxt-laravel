@@ -11,9 +11,9 @@ return new class extends Migration {
              $table->id();
              $table->string('codigo')->unique();
              $table->string('nome_completo');
-             $table->string('apelido');
-             $table->string('nome_pai');
-             $table->string('nome_mae');
+             $table->string('apelido')->nullable();
+             $table->string('nome_pai')->nullable();
+             $table->string('nome_mae')->nullable();
              $table->string('cpf')->unique();
              $table->date('data_nascimento');
              $table->string('cargo');

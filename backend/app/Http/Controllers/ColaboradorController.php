@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Colaborador;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class ColaboradorController extends Controller {
 
@@ -13,61 +12,40 @@ class ColaboradorController extends Controller {
         return Colaborador::all();
     }
 
+
     public function store(Request $request) {
-
-        // Formata o CPF que vem do front-end para sem pontuação e traçõos
-        $request->merge([
-            'cpf' => preg_replace('/\D/', '', $request->cpf)
+    try {
+        $validated = $request->validate([
+            'codigo'          => 'required|unique:colaboradores,codigo',
+            'nome_completo'   => 'required|string',
+            'cpf'             => 'required|string|size:11|unique:colaboradores,cpf',
+            'data_nascimento' => 'required|date',
+            'cargo'           => 'required|string',
+            'apelido'         => 'nullable|string',
+            'nome_pai'        => 'nullable|string',
+            'nome_mae'        => 'nullable|string',
         ]);
 
-        $data = $request->all();
-
-        if (!empty($data['data_nascimento'])) {
-            $data['data_nascimento'] = Carbon::createFromFormat('d/m/Y', $data['data_nascimento']) -> format('Y-m-d');
-        }
-
-        $validator = Validator::make($request->all(), [
-            'codigo'        => 'required|unique:colaboradores',
-            'nome_completo' => 'required|string',
-            'apelido'       => 'nullable|string',
-            'nome_pai'      => 'nullable|string',
-            'nome_mae'      => 'nullable|string',
-            'cpf'           => 'required|string|size:11|unique:colaboradores',
-            'data_nascimento' => 'required|string',
-            'cargo'           => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            $errors = $validator->errors();
-            $customErrors = [];
-
-            foreach ($errors->messages() as $field => $messages) {
-                $value = $request->input($field);
-                $customErrors[$field] = match ($field) {
-                    'codigo' => "O código “{$value}” já existe.",
-                    'cpf'    => "O CPF “{$value}” já existe.",
-                    default  => $messages[0],
-                };
-            }
-
-            return response()->json([
-                'id'      => null,
-                'dataOperacao'    => now()->toDateTimeString(),
-                'metodo'  => $request->method(),
-                'mensage' => 'FALHA',
-                'errors'  => $customErrors,
-            ], 422);
-        }
-
-        $colaborador = Colaborador::create($data);
+        Colaborador::create($validated);
 
         return response()->json([
-            'id' => $colaborador->id,
-            'dataOperacao' => $colaborador->created_at->toDateTimeString(),
-            'metodo' => 'CRIACAO',
-            'retorno' => 'SUCESSO'
+            'retorno' => 'SUCESSO',
+            'mensagem' => 'Colaborador criado com sucesso!',
         ], 201);
+    } catch (\Throwable $e) {
+        Log::error('❌ ERRO AO CADASTRAR', [
+            'erro' => $e->getMessage(),
+            'linha' => $e->getLine(),
+            'arquivo' => $e->getFile()
+        ]);
+
+        return response()->json([
+            'erro' => 'Erro interno no servidor',
+            'detalhe' => $e->getMessage()
+        ], 500);
     }
+}
+
 
 
     public function show(string $id) {
