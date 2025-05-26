@@ -17,7 +17,8 @@
         <div class="row cols-3">
           <div class="field">
             <label for="codigo">Código</label>
-            <input class="nao-clicavel" type="text" id="codigo" v-model="colaborador.codigo" :disabled="camposDesabilitados" readonly/>
+            <input class="nao-clicavel" type="text" id="codigo" v-model="colaborador.codigo"
+              :disabled="camposDesabilitados" readonly />
           </div>
           <div class="field">
             <label for="nomeCompleto">Nome completo <span class="obrigatorio">*</span></label>
@@ -47,14 +48,16 @@
             <label for="cpf">CPF <span class="obrigatorio">*</span></label>
             <ClientOnly>
               <input v-imask="{ mask: '000.000.000-00' }" type="text" id="cpf" v-model="colaborador.cpf"
-                placeholder="___.___.___-__" :disabled="camposDesabilitados" />
+                placeholder="___.___.___-__" :disabled="camposDesabilitados"
+                @blur="$event.target.dispatchEvent(new Event('input'))" @keydown.enter.prevent
+                @change="$event.target.dispatchEvent(new Event('input'))" />
             </ClientOnly>
           </div>
           <div class="field">
             <label for="dataNascimento">Data de nascimento <span class="obrigatorio">*</span></label>
             <ClientOnly>
-              <input  v-imask="{ mask: '00/00/0000' }" type="text" id="data_nascimento"
-                v-model="colaborador.data_nascimento" placeholder="__/__/____" :disabled="camposDesabilitados" />
+              <input v-model="colaborador.data_nascimento" type="date" id="data_nascimento"
+                :disabled="camposDesabilitados"/>
             </ClientOnly>
           </div>
           <div class="field">
@@ -75,11 +78,11 @@
     </div>
   </div>
 
-<!-- Toast de sucesso -->
-<div id="mensagem-sucesso" class="mensagem-sucesso oculta"></div>
+  <!-- Toast de sucesso -->
+  <div id="mensagem-sucesso" class="mensagem-sucesso oculta"></div>
 
-<!-- Toast de erro -->
-<div id="mensagem-erro" class="mensagem-erro oculta"></div>
+  <!-- Toast de erro -->
+  <div id="mensagem-erro" class="mensagem-erro oculta"></div>
 
 
 </template>
@@ -111,8 +114,26 @@ const voltarParaLista = () => {
   router.push('/lista')
 };
 
+const dataFormatada = computed({
+  get: () => colaborador.value.data_nascimento,
+  set: (val) => {
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
+      const [d, m, a] = val.split('/').map(Number)
+      const data = new Date(a, m - 1, d)
+      const isValid =
+        data.getFullYear() === a &&
+        data.getMonth() === m - 1 &&
+        data.getDate() === d
+
+      colaborador.value.data_nascimento = isValid ? val : ''
+    } else {
+      colaborador.value.data_nascimento = ''
+    }
+  }
+})
+
+
 const salvarColaborador = async () => {
-  // 1. Validação de campos obrigatórios
   const camposObrigatorios = [
     { campo: 'nome_completo', label: 'Nome completo' },
     { campo: 'data_nascimento', label: 'Data de nascimento' },
@@ -131,21 +152,19 @@ const salvarColaborador = async () => {
   }
 
   try {
-    // 2. Limpar CPF (remover máscara)
     colaborador.value.cpf = colaborador.value.cpf.replace(/\D/g, '');
 
-    // 3. Converter data de nascimento para formato YYYY-MM-DD
-    const data = colaborador.value.data_nascimento;
-    if (typeof data === 'string' && data.includes('/') && data.split('/').length === 3) {
-      const [dia, mes, ano] = data.split('/');
-      if (dia.length === 2 && mes.length === 2 && ano.length === 4) {
+    if (colaborador.value.data_nascimento.includes('/')) {
+      const [dia, mes, ano] = colaborador.value.data_nascimento.split('/');
+      if (dia && mes && ano) {
         colaborador.value.data_nascimento = `${ano}-${mes}-${dia}`;
       }
     }
 
+
+
     console.log('📤 Dados enviados para API:', colaborador.value);
 
-    // 4. Enviar para API
     const url = `http://localhost:8000/api/colaboradores${modo.value === 'editar' ? `/${colaborador.value.codigo}` : ''}`;
     const response = await fetch(url, {
       method: modo.value === 'editar' ? 'PUT' : 'POST',
@@ -155,7 +174,6 @@ const salvarColaborador = async () => {
       body: JSON.stringify(colaborador.value)
     });
 
-    // 5. Ler resposta crua e tentar parsear
     const text = await response.text();
     console.log('📥 Resposta crua da API:', text);
 
@@ -168,9 +186,8 @@ const salvarColaborador = async () => {
       return;
     }
 
-    // 6. Tratar erro de validação
     if (!response.ok) {
-      const cpfErro = result?.errors?.cpf?.[0];
+      const cpfErro = 'CPF já cadastrado. Revise os dados';
       if (cpfErro) {
         mostrarMensagemErro(cpfErro);
       } else {
@@ -179,7 +196,6 @@ const salvarColaborador = async () => {
       return;
     }
 
-    // 7. Sucesso
     mostrarMensagemSucesso('Colaborador cadastrado com sucesso!');
     setTimeout(() => router.push('/lista'), 500);
 
@@ -190,18 +206,27 @@ const salvarColaborador = async () => {
 };
 
 
-
-
 const atualizarColaborador = async (codigo) => {
   if (!codigo) {
     mostrarMensagemErro('Código inválido para atualização.');
     return;
   }
 
-  if (colaborador.value.data_nascimento.includes('/')) {
+  if (
+    colaborador.value.data_nascimento &&
+    colaborador.value.data_nascimento.includes('/')
+  ) {
     const [dia, mes, ano] = colaborador.value.data_nascimento.split('/');
-    colaborador.value.data_nascimento = `${ano}-${mes}-${dia}`;
+    const dataValida = new Date(`${ano}-${mes}-${dia}`);
+
+    if (!isNaN(dataValida)) {
+      colaborador.value.data_nascimento = dataValida.toISOString().slice(0, 10);
+    } else {
+      mostrarMensagemErro('Data de nascimento inválida.');
+      return;
+    }
   }
+
 
   try {
     const response = await fetch(`http://localhost:8000/api/colaboradores/${codigo}`, {
@@ -265,7 +290,6 @@ onMounted(async () => {
   }
 });
 
-
 const submitForm = () => {
   console.log('Modo:', modo.value)
   console.log('ID:', colaborador.value.id)
@@ -276,6 +300,7 @@ const submitForm = () => {
     salvarColaborador()
   }
 }
+
 
 const mostrarMensagemSucesso = (mensagem = 'Operação realizada com sucesso.') => {
   const el = document.getElementById('mensagem-sucesso');
@@ -291,7 +316,7 @@ const mostrarMensagemErro = (mensagem) => {
   const el = document.getElementById('mensagem-erro');
   if (!el) return;
 
-  el.innerText = String(mensagem); 
+  el.innerText = String(mensagem);
   el.classList.remove('oculta');
   setTimeout(() => el.classList.add('oculta'), 4000);
 };
@@ -313,6 +338,10 @@ const limparFormulario = () => {
   colaborador.value.codigo = codigoAtual
 }
 
+const forcarAtualizacao = () => {
+  colaborador.value['campo'] = colaborador.value['campo'].trim();
+}
+
 </script>
 
 <style scoped>
@@ -330,7 +359,8 @@ const limparFormulario = () => {
 
 .nao-clicavel {
   pointer-events: none;
-  background-color: #f9fafb; /* mantém o fundo claro */
+  background-color: #f9fafb;
+  /* mantém o fundo claro */
   color: black;
   cursor: default;
 }
@@ -340,6 +370,11 @@ const limparFormulario = () => {
   margin: 40px auto;
   padding: 0 24px;
   color: #1f2937;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
 }
 
 /* Área de abas e título */
@@ -427,6 +462,7 @@ const limparFormulario = () => {
   border-radius: 4px;
 }
 
+
 .field input::placeholder {
   color: #9ca3af;
 }
@@ -508,12 +544,14 @@ button {
 }
 
 .mensagem-sucesso {
-  background-color: #38a169; /* verde */
+  background-color: #38a169;
+  /* verde */
   color: white;
 }
 
 .mensagem-erro {
-  background-color: #e53e3e; /* vermelho */
+  background-color: #e53e3e;
+  /* vermelho */
   color: white;
 }
 
@@ -521,7 +559,4 @@ button {
   opacity: 0;
   pointer-events: none;
 }
-
-
-
 </style>
