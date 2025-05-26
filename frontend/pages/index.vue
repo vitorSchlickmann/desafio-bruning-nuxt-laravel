@@ -91,6 +91,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
+// ------ Variáveis de inicialização -------- //
 const route = useRoute();
 const router = useRouter();
 
@@ -114,7 +115,25 @@ const voltarParaLista = () => {
   router.push('/lista')
 };
 
+const limparFormulario = () => {
+  const codigoAtual = colaborador.value.codigo
 
+  Object.assign(colaborador.value, {
+    nome_completo: '',
+    apelido: '',
+    nome_pai: '',
+    nome_mae: '',
+    cpf: '',
+    data_nascimento: '',
+    cargo: ''
+  })
+
+  colaborador.value.codigo = codigoAtual
+}
+
+
+// ------ Operações POST E PUT -------- //
+// POST
 const salvarColaborador = async () => {
   const camposObrigatorios = [
     { campo: 'nome_completo', label: 'Nome completo' },
@@ -142,9 +161,6 @@ const salvarColaborador = async () => {
         colaborador.value.data_nascimento = `${ano}-${mes}-${dia}`;
       }
     }
-
-
-
     console.log('📤 Dados enviados para API:', colaborador.value);
 
     const url = `http://localhost:8000/api/colaboradores${modo.value === 'editar' ? `/${colaborador.value.codigo}` : ''}`;
@@ -187,28 +203,31 @@ const salvarColaborador = async () => {
   }
 };
 
-
+// PUT
 const atualizarColaborador = async (codigo) => {
   if (!codigo) {
     mostrarMensagemErro('Código inválido para atualização.');
     return;
   }
 
-  if (
-    colaborador.value.data_nascimento &&
-    colaborador.value.data_nascimento.includes('/')
-  ) {
-    const [dia, mes, ano] = colaborador.value.data_nascimento.split('/');
-    const dataValida = new Date(`${ano}-${mes}-${dia}`);
+  // ✅ Sanitiza o CPF sempre
+  colaborador.value.cpf = colaborador.value.cpf.replace(/\D/g, '');
 
-    if (!isNaN(dataValida)) {
-      colaborador.value.data_nascimento = dataValida.toISOString().slice(0, 10);
-    } else {
-      mostrarMensagemErro('Data de nascimento inválida.');
-      return;
+  // ✅ Converte data se estiver no formato dd/mm/yyyy ou mantém yyyy-mm-dd
+  if (colaborador.value.data_nascimento) {
+    if (colaborador.value.data_nascimento.includes('/')) {
+      const [dia, mes, ano] = colaborador.value.data_nascimento.split('/');
+      const dataValida = new Date(`${ano}-${mes}-${dia}`);
+
+      if (!isNaN(dataValida)) {
+        colaborador.value.data_nascimento = dataValida.toISOString().slice(0, 10);
+      } else {
+        mostrarMensagemErro('Data de nascimento inválida.');
+        return;
+      }
     }
+    // Se já estiver no formato yyyy-mm-dd, mantém como está (input type="date")
   }
-
 
   try {
     const response = await fetch(`http://localhost:8000/api/colaboradores/${codigo}`, {
@@ -219,8 +238,20 @@ const atualizarColaborador = async (codigo) => {
       body: JSON.stringify(colaborador.value)
     });
 
-    const result = await response.json();
+    const text = await response.text();
+    console.log('📥 Resposta crua da API (PUT):', text)
+
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (e) {
+      console.error('❌ Erro ao converter resposta em JSON:', e);
+      mostrarMensagemErro('Erro inesperado: resposta inválida do servidor.');
+      return;
+    }
+
     console.log('🔍 Resposta do Laravel:', result);
+    console.log('📤 Dados enviados no PUT:', colaborador.value)
 
     if (!response.ok) {
       if (result?.errors?.cpf?.[0]) {
@@ -232,7 +263,7 @@ const atualizarColaborador = async (codigo) => {
     }
 
     mostrarMensagemSucesso('Colaborador atualizado com sucesso!');
-    setTimeout(() => router.push('/lista'), 1500);
+    setTimeout(() => router.push('/lista'), 1000);
 
   } catch (erro) {
     console.error('❌ Erro inesperado:', erro);
@@ -240,6 +271,8 @@ const atualizarColaborador = async (codigo) => {
   }
 };
 
+
+// ------ onMounted da tela de cadastro (renderiza no carregamento dos componentes) -------- //
 onMounted(async () => {
   if ((modo.value === 'editar' || modo.value === 'ver') && id.value) {
     try {
@@ -275,7 +308,7 @@ onMounted(async () => {
   }
 });
 
-
+// ----- função para controle de atualização e cadastro do formulário ----- //
 const submitForm = () => {
   console.log('Modo:', modo.value)
   console.log('ID:', colaborador.value.id)
@@ -287,13 +320,8 @@ const submitForm = () => {
   }
 }
 
-const formatarDataParaISO = (dataBR) => {
-  if (!dataBR) return ''
-  const [dia, mes, ano] = dataBR.split('/')
-  return `${ano}-${mes}-${dia}`
-}
 
-
+// ----- Funções referente aos Toasts ----- //
 const mostrarMensagemSucesso = (mensagem = 'Operação realizada com sucesso.') => {
   const el = document.getElementById('mensagem-sucesso');
   if (!el) return;
@@ -313,26 +341,7 @@ const mostrarMensagemErro = (mensagem) => {
   setTimeout(() => el.classList.add('oculta'), 4000);
 };
 
-
-const limparFormulario = () => {
-  const codigoAtual = colaborador.value.codigo
-
-  Object.assign(colaborador.value, {
-    nome_completo: '',
-    apelido: '',
-    nome_pai: '',
-    nome_mae: '',
-    cpf: '',
-    data_nascimento: '',
-    cargo: ''
-  })
-
-  colaborador.value.codigo = codigoAtual
-}
-
-
 </script>
-
 <style scoped>
 * {
   font-family: 'Inter', sans-serif;
