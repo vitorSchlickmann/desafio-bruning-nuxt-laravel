@@ -11,6 +11,7 @@ Este projeto foi desenvolvido como parte de um desafio técnico. Ele consiste em
 - PHP 8.3.16
 - Composer 2.8.4
     - Download: https://getcomposer.org/Composer-Setup.exe
+    - Durante a instalação setar o caminho do PHP como linha de comando (normalmente dentro da pasta c:/laragon/bin/php/php.versãox.x.x).
 - Laravel Framework 12.15.0
 - API RESTful com validações, tratamento de erros e controle de CORS
 - Banco de dados MySQL 8.4.3
