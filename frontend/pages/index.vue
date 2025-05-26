@@ -526,7 +526,7 @@ button {
   }
 
   .actions {
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
   }
 
@@ -535,7 +535,7 @@ button {
   }
 
   .save-button {
-    align-self: flex-end;
+    align-self: flex-start;
   }
 }
 

@@ -368,4 +368,38 @@ const cancelarExclusao = () => {
   cursor: pointer;
 }
 
+/* Responsivo */
+@media (max-width: 768px) {
+  .item-conteudo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .acoes {
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .acoes a,
+  .acoes button {
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+    padding: 8px 17px;
+    font-size: 15px;
+    margin-right: 0; /* remove margens laterais extras */
+    height: 40px; /* opcional: altura padronizada */
+  }
+
+  .editar,
+  .excluir,
+  .visualizar {
+    margin-right: 0;
+  }
+}
+
+
+
 </style>
