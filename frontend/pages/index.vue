@@ -274,9 +274,21 @@ onMounted(async () => {
       const response = await fetch(`http://localhost:8000/api/colaboradores/${id.value}`);
       const data = await response.json();
 
-      colaborador.value = data;
+      // Converte a data de nascimento (ISO → BR)
+      const formatarDataParaInput = (dataISO) => {
+        if (!dataISO) return ''
+        const [ano, mes, dia] = dataISO.split('-')
+        return `${dia}/${mes}/${ano}`
+      }
+
+      colaborador.value = {
+        ...data,
+        data_nascimento: formatarDataParaInput(data.data_nascimento)
+      }
+
       camposDesabilitados.value = modo.value === 'ver';
     } catch (e) {
+      console.error('Erro ao carregar colaborador para edição:', e)
     }
   } else {
     try {
@@ -290,6 +302,7 @@ onMounted(async () => {
   }
 });
 
+
 const submitForm = () => {
   console.log('Modo:', modo.value)
   console.log('ID:', colaborador.value.id)
@@ -299,6 +312,12 @@ const submitForm = () => {
   } else {
     salvarColaborador()
   }
+}
+
+const formatarDataParaISO = (dataBR) =>  {
+  if (!dataBR) return ''
+  const [dia, mes, ano] = dataBR.split('/')
+  return `${ano}-${mes}-${dia}`
 }
 
 
@@ -338,9 +357,6 @@ const limparFormulario = () => {
   colaborador.value.codigo = codigoAtual
 }
 
-const forcarAtualizacao = () => {
-  colaborador.value['campo'] = colaborador.value['campo'].trim();
-}
 
 </script>
 
