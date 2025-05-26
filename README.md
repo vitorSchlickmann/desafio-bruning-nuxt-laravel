@@ -5,7 +5,8 @@ Este projeto foi desenvolvido como parte de um desafio técnico. Ele consiste em
 ## 🚀 Tecnologias Utilizadas
 
 ### 🔧 Back-end:
-- Laragon 2025 v8.1.0 (Ferramenta que engloba Apache, MySQL e Composer)
+- Laragon 2025 v8.1.0 (Ferramenta que engloba Apache, MySQL e Composer) 
+    - Download: https://github.com/leokhoa/laragon/releases/download/8.1.0/laragon-wamp.exe
 - PHP 8.3.16 
 - Laravel Framework 12.15.0
 - API RESTful com validações, tratamento de erros e controle de CORS
