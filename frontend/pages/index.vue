@@ -111,6 +111,7 @@ const colaborador = ref({
   cargo: ''
 });
 
+
 const voltarParaLista = () => {
   router.push('/lista')
 };
