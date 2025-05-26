@@ -57,7 +57,7 @@
             <label for="dataNascimento">Data de nascimento <span class="obrigatorio">*</span></label>
             <ClientOnly>
               <input v-model="colaborador.data_nascimento" type="date" id="data_nascimento"
-                :disabled="camposDesabilitados"/>
+                :disabled="camposDesabilitados" />
             </ClientOnly>
           </div>
           <div class="field">
@@ -113,24 +113,6 @@ const colaborador = ref({
 const voltarParaLista = () => {
   router.push('/lista')
 };
-
-const dataFormatada = computed({
-  get: () => colaborador.value.data_nascimento,
-  set: (val) => {
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
-      const [d, m, a] = val.split('/').map(Number)
-      const data = new Date(a, m - 1, d)
-      const isValid =
-        data.getFullYear() === a &&
-        data.getMonth() === m - 1 &&
-        data.getDate() === d
-
-      colaborador.value.data_nascimento = isValid ? val : ''
-    } else {
-      colaborador.value.data_nascimento = ''
-    }
-  }
-})
 
 
 const salvarColaborador = async () => {
@@ -258,32 +240,23 @@ const atualizarColaborador = async (codigo) => {
   }
 };
 
-
-
-watch(
-  () => route.query.id,
-  (val) => {
-    if (val) id.value = val
-  },
-  { immediate: true }
-)
-
 onMounted(async () => {
   if ((modo.value === 'editar' || modo.value === 'ver') && id.value) {
     try {
       const response = await fetch(`http://localhost:8000/api/colaboradores/${id.value}`);
       const data = await response.json();
 
-      // Converte a data de nascimento (ISO → BR)
-      const formatarDataParaInput = (dataISO) => {
-        if (!dataISO) return ''
-        const [ano, mes, dia] = dataISO.split('-')
-        return `${dia}/${mes}/${ano}`
+      console.log('🟢 Dados recebidos do back-end:', data);
+      const converterDataParaDateInput = (dataBR) => {
+        if (!dataBR) return ''
+        const [dia, mes, ano] = dataBR.split('/')
+        return `${ano}-${mes}-${dia}`
       }
+
 
       colaborador.value = {
         ...data,
-        data_nascimento: formatarDataParaInput(data.data_nascimento)
+        data_nascimento: converterDataParaDateInput(data.data_nascimento)
       }
 
       camposDesabilitados.value = modo.value === 'ver';
@@ -314,7 +287,7 @@ const submitForm = () => {
   }
 }
 
-const formatarDataParaISO = (dataBR) =>  {
+const formatarDataParaISO = (dataBR) => {
   if (!dataBR) return ''
   const [dia, mes, ano] = dataBR.split('/')
   return `${ano}-${mes}-${dia}`
