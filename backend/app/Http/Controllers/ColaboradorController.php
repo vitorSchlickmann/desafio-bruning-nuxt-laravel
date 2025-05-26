@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Colaborador;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
-class ColaboradorController extends Controller {
+class ColaboradorController extends Controller
+{
 
     public function index() {
         return Colaborador::all();
@@ -14,67 +16,89 @@ class ColaboradorController extends Controller {
 
 
     public function store(Request $request) {
-    try {
-        $validated = $request->validate([
-            'codigo'          => 'required|unique:colaboradores,codigo',
-            'nome_completo'   => 'required|string',
-            'cpf'             => 'required|string|size:11|unique:colaboradores,cpf',
-            'data_nascimento' => 'required|date',
-            'cargo'           => 'required|string',
-            'apelido'         => 'nullable|string',
-            'nome_pai'        => 'nullable|string',
-            'nome_mae'        => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'codigo'          => 'required|unique:colaboradores,codigo',
+                'nome_completo'   => 'required|string',
+                'cpf'             => 'required|string|size:11|unique:colaboradores,cpf',
+                'data_nascimento' => 'required|date',
+                'cargo'           => 'required|string',
+                'apelido'         => 'nullable|string',
+                'nome_pai'        => 'nullable|string',
+                'nome_mae'        => 'nullable|string',
+            ]);
 
-        Colaborador::create($validated);
+            Colaborador::create($validated);
 
-        return response()->json([
-            'retorno' => 'SUCESSO',
-            'mensagem' => 'Colaborador criado com sucesso!',
-        ], 201);
-    } catch (\Throwable $e) {
-        Log::error('❌ ERRO AO CADASTRAR', [
-            'erro' => $e->getMessage(),
-            'linha' => $e->getLine(),
-            'arquivo' => $e->getFile()
-        ]);
+            return response()->json([
+                'retorno' => 'SUCESSO',
+                'mensagem' => 'Colaborador criado com sucesso!',
+            ], 201);
+        } catch (\Throwable $e) {
+            Log::error('❌ ERRO AO CADASTRAR', [
+                'erro' => $e->getMessage(),
+                'linha' => $e->getLine(),
+                'arquivo' => $e->getFile()
+            ]);
 
-        return response()->json([
-            'erro' => 'Erro interno no servidor',
-            'detalhe' => $e->getMessage()
-        ], 500);
+            return response()->json([
+                'erro' => 'Erro interno no servidor',
+                'detalhe' => $e->getMessage()
+            ], 500);
+        }
     }
-}
 
 
 
-    public function show(string $id) {
+    public function show(string $id)
+    {
         return Colaborador::findOrFail($id);
     }
 
     public function update(Request $request, $id) {
-    $colaborador = Colaborador::findOrFail($id);
+    try {
+        $colaborador = Colaborador::findOrFail($id);
 
-    $validated = $request->validate([
-        'codigo'          => 'required|unique:colaboradores,codigo,' . $id,
-        'nome_completo'   => 'required|string',
-        'apelido'         => 'nullable|string',
-        'nome_pai'        => 'nullable|string',
-        'nome_mae'        => 'nullable|string',
-        'cpf'             => 'required|string|size:11|unique:colaboradores,cpf,' . $id,
-        'data_nascimento' => 'required|date',
-        'cargo'           => 'required|string',
-    ]);
+        $validated = $request->validate([
+            'codigo' => [
+                'required',
+                Rule::unique('colaboradores', 'codigo')->ignore($id),
+            ],
+            'nome_completo'   => 'required|string',
+            'apelido'         => 'nullable|string',
+            'nome_pai'        => 'nullable|string',
+            'nome_mae'        => 'nullable|string',
+            'cpf' => [
+                'required',
+                'string',
+                'size:11',
+                Rule::unique('colaboradores', 'cpf')->ignore($id),
+            ],
+            'data_nascimento' => 'required|date',
+            'cargo'           => 'required|string',
+        ]);
 
-    $colaborador->update($validated);
+        $colaborador->update($validated);
 
-    return response()->json([
-        'id'            => $colaborador->id,
-        'dataOperacao'  => now()->toDateTimeLocalString(),
-        'metodo'        => 'ATUALIZAR',
-        'retorno'       => 'SUCESSO',
-    ], 200);
+        return response()->json([
+            'id'           => $colaborador->id,
+            'dataOperacao' => now()->toDateTimeLocalString(),
+            'metodo'       => 'ATUALIZAR',
+            'retorno'      => 'SUCESSO',
+        ], 200);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'message' => 'Dados inválidos',
+            'errors'  => $e->errors(),
+        ], 422);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'erro'    => 'Erro interno ao atualizar colaborador',
+            'detalhe' => $e->getMessage(),
+        ], 500);
     }
+}
 
 
 

@@ -161,11 +161,12 @@ const salvarColaborador = async () => {
         colaborador.value.data_nascimento = `${ano}-${mes}-${dia}`;
       }
     }
+
     console.log('📤 Dados enviados para API:', colaborador.value);
 
-    const url = `http://localhost:8000/api/colaboradores${modo.value === 'editar' ? `/${colaborador.value.codigo}` : ''}`;
+    const url = `http://localhost:8000/api/colaboradores`;
     const response = await fetch(url, {
-      method: modo.value === 'editar' ? 'PUT' : 'POST',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
@@ -183,11 +184,15 @@ const salvarColaborador = async () => {
       mostrarMensagemErro('Erro inesperado: resposta inválida do servidor.');
       return;
     }
-
+    console.log('JSON', result);
     if (!response.ok) {
-      const cpfErro = 'CPF já cadastrado. Revise os dados';
+      const cpfErro =
+        result?.errors?.cpf?.[0] ||
+        result?.errors?.documento?.[0] ||
+        (result?.detalhe?.toLowerCase().includes('cpf') && result.detalhe);
+
       if (cpfErro) {
-        mostrarMensagemErro(cpfErro);
+        mostrarMensagemErro('CPF já cadastrado. Revise os dados');
       } else {
         mostrarMensagemErro('Erro ao cadastrar colaborador. Verifique os dados e tente novamente.');
       }
@@ -203,6 +208,7 @@ const salvarColaborador = async () => {
   }
 };
 
+
 // PUT
 const atualizarColaborador = async (codigo) => {
   if (!codigo) {
@@ -210,10 +216,8 @@ const atualizarColaborador = async (codigo) => {
     return;
   }
 
-  // ✅ Sanitiza o CPF sempre
   colaborador.value.cpf = colaborador.value.cpf.replace(/\D/g, '');
 
-  // ✅ Converte data se estiver no formato dd/mm/yyyy ou mantém yyyy-mm-dd
   if (colaborador.value.data_nascimento) {
     if (colaborador.value.data_nascimento.includes('/')) {
       const [dia, mes, ano] = colaborador.value.data_nascimento.split('/');
@@ -226,10 +230,10 @@ const atualizarColaborador = async (codigo) => {
         return;
       }
     }
-    // Se já estiver no formato yyyy-mm-dd, mantém como está (input type="date")
   }
 
   try {
+    console.log('🧭 Atualizando via URL:', `http://localhost:8000/api/colaboradores/${codigo}`);
     const response = await fetch(`http://localhost:8000/api/colaboradores/${codigo}`, {
       method: 'PUT',
       headers: {
@@ -250,17 +254,25 @@ const atualizarColaborador = async (codigo) => {
       return;
     }
 
-    console.log('🔍 Resposta do Laravel:', result);
-    console.log('📤 Dados enviados no PUT:', colaborador.value)
-
     if (!response.ok) {
-      if (result?.errors?.cpf?.[0]) {
-        mostrarMensagemErro(result.errors.cpf[0]);
+      const cpfErro =
+        result?.errors?.cpf?.[0] ||
+        result?.errors?.documento?.[0] ||
+        (result?.detalhe?.toLowerCase().includes('cpf') && result.detalhe);
+
+
+      if (cpfErro) {
+        mostrarMensagemErro('CPF já cadastrado. Revise os dados');
       } else {
-        mostrarMensagemErro('Erro ao atualizar colaborador.');
+        mostrarMensagemErro('Erro ao cadastrar colaborador. Verifique os dados e tente novamente.');
       }
       return;
     }
+
+
+    console.log('🔍 Resposta do Laravel:', result);
+    console.log('📤 Dados enviados no PUT:', colaborador.value)
+
 
     mostrarMensagemSucesso('Colaborador atualizado com sucesso!');
     setTimeout(() => router.push('/lista'), 1000);
