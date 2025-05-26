@@ -7,7 +7,10 @@ Este projeto foi desenvolvido como parte de um desafio técnico. Ele consiste em
 ### 🔧 Back-end:
 - Laragon 2025 v8.1.0 (Ferramenta que engloba Apache, MySQL e Composer) 
     - Download: https://github.com/leokhoa/laragon/releases/download/8.1.0/laragon-wamp.exe
-- PHP 8.3.16 
+    - Iniciar Laragon > Iniciar tudo (vai abrir a tela de licença) > Close
+- PHP 8.3.16
+- Composer 2.8.4
+    - Download: https://getcomposer.org/Composer-Setup.exe
 - Laravel Framework 12.15.0
 - API RESTful com validações, tratamento de erros e controle de CORS
 - Banco de dados MySQL 8.4.3
